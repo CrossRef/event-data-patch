@@ -15,7 +15,8 @@
             ; Patch namespaces.
             [event-data-patch.patches.field-names :as field-names]
             [event-data-patch.patches.timestamp :as timestamp]
-            [event-data-patch.patches.tweet-id :as tweet-id]))
+            [event-data-patch.patches.tweet-id :as tweet-id]
+            [event-data-patch.patches.license :as license]))
 
 
 
@@ -23,6 +24,7 @@
   "Combined patches as a function."
   ; NB last function is applied first. There are some dependencies between functions.
   (comp field-names/patch
+        license/patch
         timestamp/patch
         tweet-id/patch))
 

@@ -78,10 +78,18 @@
                                    (swap! counter inc)
                                    (when (zero? (mod @counter 1000))
                                      (log/info "Retrieving Events for" date-str "retrieved" @counter "/" num-keys " = " (int (* 100 (/ @counter num-keys))) "%"))                                   
-                                   (store/get-string @s3-storage %)) event-keys)
+                                   [% (store/get-string @s3-storage %)]) event-keys)
         event-blobs (map deref future-event-blobs)
         
-        all-events (map #(json/read-str % :key-fn keyword) event-blobs)]
+        all-events (keep (fn [[id json-str]]
+                          (try
+                            (json/read-str json-str :key-fn keyword)
+                            (catch NullPointerException ex
+                              (do
+                                (log/error "Can't read event ID from storage" id)
+                                ; Don't allow processing to continue or we'll end up with inconsistent data.
+                                (throw ex)
+                                nil)))) event-blobs)]
     all-events))
 
 (defn missing-events-for-date
